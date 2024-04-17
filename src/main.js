@@ -126,20 +126,25 @@ function hideLoadMore() {
 }
 
 function checkImageLoad(response, totalPages) {
+  const imagesCount = response.data.hits.length;
+
   const checkImagesInterval = setInterval(() => {
     const images = list.querySelectorAll('img');
     const allImagesLoaded = [...images].every(img => img.complete);
     if (allImagesLoaded) {
       clearInterval(checkImagesInterval);
       if (response.config.params.page >= totalPages) {
-        return showWarningToast();
+        if (imagesCount > 15) {
+          showWarningToast();
+        } else {
+          return;
+        }
       } else {
         showLoadMore();
       }
     }
   }, 50);
 }
-
 const lightbox = new SimpleLightbox('.list a', {
   captionsData: 'alt',
   captionDelay: 250,
