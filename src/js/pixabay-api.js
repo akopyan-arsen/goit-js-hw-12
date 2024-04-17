@@ -3,17 +3,20 @@ import axios from 'axios';
 const loader = document.querySelector('.loader');
 const loader2 = document.querySelector('.loader2');
 
-export function hideLoader() {
-  loader.classList.add('visually-hidden');
-  loader2.classList.add('visually-hidden');
+export function toggleLoader() {
+  loader.classList.toggle('visually-hidden');
+}
+
+export function toggleLoader2() {
+  loader2.classList.toggle('visually-hidden');
 }
 
 export async function searchImages(searchInput, page) {
   const API_KEY = '43234755-a337228de2a5121df872aa78d';
   if (page.currentPage === 1) {
-    loader.classList.remove('visually-hidden');
+    toggleLoader();
   } else {
-    loader2.classList.remove('visually-hidden');
+    toggleLoader2();
   }
   try {
     const response = await axios.get('https://pixabay.com/api/', {

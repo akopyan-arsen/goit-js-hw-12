@@ -5,7 +5,8 @@ import iziToast from 'izitoast';
 import 'izitoast/dist/css/iziToast.min.css';
 
 import { searchImages } from './js/pixabay-api.js';
-import { hideLoader } from './js/pixabay-api.js';
+import { toggleLoader } from './js/pixabay-api.js';
+import { toggleLoader2 } from './js/pixabay-api.js';
 import { createMarkup } from './js/render-functions.js';
 
 const form = document.querySelector('.form');
@@ -25,6 +26,7 @@ function getFromLocalStorage(key) {
   const data = localStorage.getItem(key);
   return data ? data : null;
 }
+
 input.addEventListener('input', () => {
   if (input.value.trim() !== '') {
     submitBtn.disabled = false;
@@ -42,103 +44,52 @@ async function handleClick(event) {
   page.currentPage = 1;
   if (searchInputValue !== '') {
     list.innerHTML = '';
-    loadMore.classList.add('visually-hidden');
+    hideLoadMore();
     saveToLocalStorage('searchInputValue', searchInputValue);
     try {
       const response = await searchImages(searchInputValue, page);
       if (response.data.hits.length === 0) {
-        hideLoader();
-        iziToast.error({
-          message:
-            'Sorry, there are no images matching your search query. Please try again!',
-          position: 'topRight',
-          backgroundColor: '#EF4040',
-          messageColor: '#fff',
-          timeout: 3000,
-        });
+        toggleLoader();
+        showErrorToast(
+          'Sorry, there are no images matching your search query. Please try again!'
+        );
       } else {
-        hideLoader();
+        toggleLoader();
         list.insertAdjacentHTML('beforeend', createMarkup(response.data.hits));
         lightbox.refresh();
-        const checkImagesInterval = setInterval(() => {
-          const images = list.querySelectorAll('img');
-          const allImagesLoaded = [...images].every(img => img.complete);
-          if (allImagesLoaded) {
-            clearInterval(checkImagesInterval);
-            const totalPages = Math.ceil(
-              response.data.totalHits / response.config.params.per_page
-            );
-            if (response.config.params.page >= totalPages) {
-              return iziToast.warning({
-                position: 'topRight',
-                backgroundColor: '#00A36C',
-                message:
-                  "We're sorry, but you've reached the end of search results.",
-              });
-            } else {
-              loadMore.classList.remove('visually-hidden');
-            }
-          }
-        }, 50);
+        const totalPages = Math.ceil(
+          response.data.totalHits / response.config.params.per_page
+        );
+        checkImageLoad(response, totalPages);
       }
       form.reset();
       submitBtn.disabled = true;
     } catch (error) {
-      hideLoader();
-      iziToast.error({
-        message: `${error}`,
-        position: 'topRight',
-        backgroundColor: '#EF4040',
-        messageColor: '#fff',
-        timeout: 3000,
-      });
+      toggleLoader();
+      showErrorToast(error);
     }
   }
 }
 
 async function loadClick() {
-  loadMore.classList.add('visually-hidden');
+  hideLoadMore();
   const searchInputValue = getFromLocalStorage('searchInputValue');
   try {
     const response = await searchImages(searchInputValue, page);
-    console.log(response);
     const totalPages = Math.ceil(
       response.data.totalHits / response.config.params.per_page
     );
-    hideLoader();
+    toggleLoader2();
     list.insertAdjacentHTML('beforeend', createMarkup(response.data.hits));
     lightbox.refresh();
     scroll();
-    const checkImagesInterval = setInterval(() => {
-      const images = list.querySelectorAll('img');
-      const allImagesLoaded = [...images].every(img => img.complete);
-      if (allImagesLoaded) {
-        clearInterval(checkImagesInterval);
-        if (response.config.params.page >= totalPages) {
-          loadMore.classList.add('visually-hidden');
-          return iziToast.warning({
-            position: 'topRight',
-            backgroundColor: '#00A36C',
-            message:
-              "We're sorry, but you've reached the end of search results.",
-          });
-        }
-      } else {
-        loadMore.classList.remove('visually-hidden');
-      }
-    }, 50);
+    checkImageLoad(response, totalPages);
   } catch (error) {
-    console.log(error);
-    hideLoader();
-    iziToast.error({
-      message: `${error}`,
-      position: 'topRight',
-      backgroundColor: '#EF4040',
-      messageColor: '#fff',
-      timeout: 3000,
-    });
+    toggleLoader2();
+    showErrorToast(error);
   }
 }
+
 function scroll() {
   const card = list.firstElementChild;
   const height = card.getBoundingClientRect().height;
@@ -146,6 +97,47 @@ function scroll() {
     top: height * 2,
     behavior: 'smooth',
   });
+}
+
+function showErrorToast(message) {
+  iziToast.error({
+    message: message,
+    position: 'topRight',
+    backgroundColor: '#EF4040',
+    messageColor: '#fff',
+    timeout: 3000,
+  });
+}
+
+function showWarningToast() {
+  iziToast.warning({
+    position: 'topRight',
+    backgroundColor: '#00A36C',
+    message: "We're sorry, but you've reached the end of search results.",
+  });
+}
+
+function showLoadMore() {
+  loadMore.classList.remove('visually-hidden');
+}
+
+function hideLoadMore() {
+  loadMore.classList.add('visually-hidden');
+}
+
+function checkImageLoad(response, totalPages) {
+  const checkImagesInterval = setInterval(() => {
+    const images = list.querySelectorAll('img');
+    const allImagesLoaded = [...images].every(img => img.complete);
+    if (allImagesLoaded) {
+      clearInterval(checkImagesInterval);
+      if (response.config.params.page >= totalPages) {
+        return showWarningToast();
+      } else {
+        showLoadMore();
+      }
+    }
+  }, 50);
 }
 
 const lightbox = new SimpleLightbox('.list a', {
