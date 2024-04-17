@@ -66,7 +66,7 @@ async function handleClick(event) {
       submitBtn.disabled = true;
     } catch (error) {
       toggleLoader();
-      showErrorToast(error);
+      showErrorToast(`${error}`);
     }
   }
 }
@@ -86,7 +86,7 @@ async function loadClick() {
     checkImageLoad(response, totalPages);
   } catch (error) {
     toggleLoader2();
-    showErrorToast(error);
+    showErrorToast(`${error}`);
   }
 }
 

@@ -18,22 +18,18 @@ export async function searchImages(searchInput, page) {
   } else {
     toggleLoader2();
   }
-  try {
-    const response = await axios.get('https://pixabay.com/api/', {
-      params: {
-        key: API_KEY,
-        q: searchInput,
-        image_type: 'photo',
-        orientation: 'horizontal',
-        safesearch: true,
-        per_page: 100,
-        page: page.currentPage,
-      },
-    });
+  const response = await axios.get('https://pixabay.com/api/', {
+    params: {
+      key: API_KEY,
+      q: searchInput,
+      image_type: 'photo',
+      orientation: 'horizontal',
+      safesearch: true,
+      per_page: 15,
+      page: page.currentPage,
+    },
+  });
 
-    page.currentPage += 1;
-    return response;
-  } catch (error) {
-    throw new Error(error.message);
-  }
+  page.currentPage += 1;
+  return response;
 }
