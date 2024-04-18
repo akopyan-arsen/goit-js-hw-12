@@ -15,7 +15,6 @@ const list = document.querySelector('.list');
 const submitBtn = document.querySelector('.submitBtn');
 const loadMore = document.querySelector('.loadMore');
 const page = { currentPage: 1 };
-
 submitBtn.disabled = true;
 
 function saveToLocalStorage(key, value) {
@@ -126,25 +125,20 @@ function hideLoadMore() {
 }
 
 function checkImageLoad(response, totalPages) {
-  const imagesCount = response.data.hits.length;
-
   const checkImagesInterval = setInterval(() => {
     const images = list.querySelectorAll('img');
     const allImagesLoaded = [...images].every(img => img.complete);
     if (allImagesLoaded) {
       clearInterval(checkImagesInterval);
       if (response.config.params.page >= totalPages) {
-        if (imagesCount > 15) {
-          showWarningToast();
-        } else {
-          return;
-        }
+        return showWarningToast();
       } else {
         showLoadMore();
       }
     }
   }, 50);
 }
+
 const lightbox = new SimpleLightbox('.list a', {
   captionsData: 'alt',
   captionDelay: 250,
